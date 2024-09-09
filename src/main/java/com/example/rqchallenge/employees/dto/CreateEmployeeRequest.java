@@ -15,6 +15,5 @@ public class CreateEmployeeRequest implements Serializable {
     private String name;
     private String salary;
     private String age;
-    @JsonProperty("employee_name")
     private String profileImage;
 }
