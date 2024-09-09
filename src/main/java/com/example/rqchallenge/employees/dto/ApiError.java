@@ -1,4 +1,4 @@
-package com.example.rqchallenge.employees.exception;
+package com.example.rqchallenge.employees.dto;
 
 
 import com.example.rqchallenge.employees.constants.ApplicationConstants;

@@ -1,6 +1,6 @@
 package com.example.rqchallenge.employees.config;
 
-import com.example.rqchallenge.employees.exception.ExternalApiInternalServerException;
+import com.example.rqchallenge.employees.exception.EmployeeApiInternalServerException;
 import com.example.rqchallenge.employees.exception.ExternalApiRedirectException;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -46,7 +46,7 @@ public class BeanConfig {
         return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
             if (clientResponse.statusCode().is5xxServerError()) {
                 return clientResponse.bodyToMono(String.class)
-                        .flatMap(errorBody -> Mono.error(new ExternalApiInternalServerException(errorBody)));
+                        .flatMap(errorBody -> Mono.error(new EmployeeApiInternalServerException(errorBody)));
             } else if (clientResponse.statusCode().is3xxRedirection()) {
                 return clientResponse.bodyToMono(String.class)
                         .flatMap(errorBody -> Mono.error(new ExternalApiRedirectException(errorBody)));

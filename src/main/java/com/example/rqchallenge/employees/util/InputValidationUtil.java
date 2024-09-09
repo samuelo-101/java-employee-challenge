@@ -6,6 +6,7 @@ import com.example.rqchallenge.employees.exception.BadRequestException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class InputValidationUtil {
 
@@ -35,6 +36,10 @@ public class InputValidationUtil {
         Optional<String> invalidFieldOptional = employeeInput.keySet().stream().filter(key -> !allowedFields.contains(key.toLowerCase())).findFirst();
         if (invalidFieldOptional.isPresent()) {
             throw new BadRequestException("Invalid field supplied: " + invalidFieldOptional.get());
+        }
+        boolean containsAllRequiredKeys = employeeInput.keySet().containsAll(allowedFields.stream().filter(field -> !field.equals(ApplicationConstants.FIELD_EMPLOYEE_PROFILE_IMAGE)).collect(Collectors.toList()));
+        if(!containsAllRequiredKeys) {
+            throw new BadRequestException("Request does not contain all required fields.");
         }
     }
 

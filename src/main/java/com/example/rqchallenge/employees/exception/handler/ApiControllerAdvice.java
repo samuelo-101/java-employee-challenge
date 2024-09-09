@@ -1,6 +1,7 @@
 package com.example.rqchallenge.employees.exception.handler;
 
 import com.example.rqchallenge.employees.constants.ErrorCodeConstants;
+import com.example.rqchallenge.employees.dto.ApiError;
 import com.example.rqchallenge.employees.exception.*;
 import com.example.rqchallenge.employees.filter.RequestFilter;
 import io.netty.handler.timeout.ReadTimeoutException;
@@ -25,10 +26,21 @@ public class ApiControllerAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ApiError> employeeNotFoundErrorHandler(EmployeeNotFoundException ex) {
         final String requestCorrelationId = getRequestCorrelationId();
-        log.error("Error correlationId {} | {}", requestCorrelationId, ex.getMessage());
+        log.error("Error {} {} | {}", RequestFilter.REQUEST_CORRELATION_ID_KEY, requestCorrelationId, ex.getMessage());
         return errorFormatter(
                 HttpStatus.NOT_FOUND,
                 new ApiError(requestCorrelationId, ErrorCodeConstants.EMPLOYEE_NOT_FOUND_CODE, ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(NoDataException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<ApiError> noDataErrorHandler(NoDataException ex) {
+        final String requestCorrelationId = getRequestCorrelationId();
+        log.error("Error {} {} | {}", RequestFilter.REQUEST_CORRELATION_ID_KEY, requestCorrelationId, ex.getMessage());
+        return errorFormatter(
+                HttpStatus.NOT_FOUND,
+                new ApiError(requestCorrelationId, ErrorCodeConstants.EMPLOYEE_NO_DATA, ex.getMessage())
         );
     }
 
@@ -36,18 +48,18 @@ public class ApiControllerAdvice {
     @ResponseStatus(HttpStatus.TEMPORARY_REDIRECT)
     public ResponseEntity<ApiError> redirectErrorHandler(ExternalApiRedirectException ex) {
         final String requestCorrelationId = getRequestCorrelationId();
-        log.error("Error correlationId {} | {}", requestCorrelationId, ex.getMessage());
+        log.error("Error {} {} | {}", RequestFilter.REQUEST_CORRELATION_ID_KEY, requestCorrelationId, ex.getMessage());
         return errorFormatter(
                 HttpStatus.TEMPORARY_REDIRECT,
                 new ApiError(requestCorrelationId, ErrorCodeConstants.EXTERNAL_API_REDIRECT, ex.getMessage())
         );
     }
 
-    @ExceptionHandler(ExternalApiInternalServerException.class)
+    @ExceptionHandler(EmployeeApiInternalServerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<ApiError> internalServerErrorHandler(ExternalApiInternalServerException ex) {
+    public ResponseEntity<ApiError> internalServerErrorHandler(EmployeeApiInternalServerException ex) {
         final String requestCorrelationId = getRequestCorrelationId();
-        log.error("Error correlationId {} | {}", requestCorrelationId, ex.getMessage());
+        log.error("Error {} {} | {}", RequestFilter.REQUEST_CORRELATION_ID_KEY, requestCorrelationId, ex.getMessage());
         return errorFormatter(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 new ApiError(requestCorrelationId, ErrorCodeConstants.EXTERNAL_API_SERVER_ERROR, ex.getMessage())
@@ -58,7 +70,7 @@ public class ApiControllerAdvice {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ApiError> invalidFieldErrorHandler(BadRequestException ex) {
         final String requestCorrelationId = getRequestCorrelationId();
-        log.error("Error correlationId {} | {}", requestCorrelationId, ex.getMessage());
+        log.error("Error {} {} | {}", RequestFilter.REQUEST_CORRELATION_ID_KEY, requestCorrelationId, ex.getMessage());
         return errorFormatter(
                 HttpStatus.BAD_REQUEST,
                 new ApiError(requestCorrelationId, ErrorCodeConstants.EXTERNAL_API_INVALID_FIELD, ex.getMessage())
@@ -69,7 +81,7 @@ public class ApiControllerAdvice {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ApiError> invalidFieldErrorHandler(WebClientResponseException ex) {
         final String requestCorrelationId = getRequestCorrelationId();
-        log.error("Error correlationId {} | {}", requestCorrelationId, ex.getMessage());
+        log.error("Error {} {} | {}", RequestFilter.REQUEST_CORRELATION_ID_KEY, requestCorrelationId, ex.getMessage());
         return errorFormatter(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 new ApiError(requestCorrelationId, ErrorCodeConstants.EXTERNAL_API_SERVER_ERROR, String.format("Employees API returned error code %d.", ex.getStatusCode().value()))
@@ -80,7 +92,7 @@ public class ApiControllerAdvice {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<ApiError> apiTimeoutErrorHandler(ReadTimeoutException ex) {
         final String requestCorrelationId = getRequestCorrelationId();
-        log.error("Error correlationId {} | {}", requestCorrelationId, ex.getMessage());
+        log.error("Error {} {} | {}", RequestFilter.REQUEST_CORRELATION_ID_KEY, requestCorrelationId, ex.getMessage());
         return errorFormatter(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 new ApiError(requestCorrelationId, ErrorCodeConstants.EXTERNAL_API_SERVER_ERROR, "Employees API timed out. Please try again.")

@@ -21,7 +21,8 @@ public class RequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String requestCorrelationId = UUID.randomUUID().toString();
         request.setAttribute(REQUEST_CORRELATION_ID_KEY, requestCorrelationId);
-        log.info("Request assigned {}: {}", REQUEST_CORRELATION_ID_KEY, requestCorrelationId);
+        log.info("Request initiated {}: {}", REQUEST_CORRELATION_ID_KEY, requestCorrelationId);
         filterChain.doFilter(request, response);
+        log.info("Request completed {}: {}", REQUEST_CORRELATION_ID_KEY, requestCorrelationId);
     }
 }

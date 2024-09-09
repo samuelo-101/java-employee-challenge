@@ -1,8 +1,8 @@
 package com.example.rqchallenge.employees;
 
 import com.example.rqchallenge.employees.dto.Employee;
-import com.example.rqchallenge.employees.exception.BadRequestException;
 import com.example.rqchallenge.employees.exception.EmployeeNotFoundException;
+import com.example.rqchallenge.employees.exception.NoDataException;
 import com.example.rqchallenge.employees.service.IEmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,8 +15,8 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/employees/api/v1/")
-public class IEmployeeControllerImpl implements IEmployeeController {
+@RequestMapping("/api/v1")
+public class EmployeeControllerImpl implements IEmployeeController {
 
     private final IEmployeeService iEmployeeService;
 
@@ -27,7 +27,11 @@ public class IEmployeeControllerImpl implements IEmployeeController {
 
     @Override
     public ResponseEntity<List<Employee>> getEmployeesByNameSearch(String searchString) {
-        return ResponseEntity.ok(iEmployeeService.getEmployeesByNameSearch(searchString));
+        List<Employee> employeesByNameSearch = iEmployeeService.getEmployeesByNameSearch(searchString);
+        if (employeesByNameSearch == null || employeesByNameSearch.isEmpty()) {
+            throw new NoDataException();
+        }
+        return ResponseEntity.ok(employeesByNameSearch);
     }
 
     @Override

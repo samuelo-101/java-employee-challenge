@@ -1,12 +1,12 @@
 package com.example.rqchallenge.employees.service;
 
+import com.example.rqchallenge.BaseTest;
 import com.example.rqchallenge.employees.constants.ApplicationConstants;
 import com.example.rqchallenge.employees.constants.EmployeesApiPaths;
 import com.example.rqchallenge.employees.dto.Employee;
 import com.example.rqchallenge.employees.exception.BadRequestException;
-import com.example.rqchallenge.employees.exception.ExternalApiInternalServerException;
+import com.example.rqchallenge.employees.exception.EmployeeApiInternalServerException;
 import com.example.rqchallenge.employees.exception.NoDataException;
-import com.example.rqchallenge.employees.util.TestUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -14,18 +14,9 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.runner.RunWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.BasicJsonTester;
-import org.springframework.cache.CacheManager;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
@@ -35,10 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-@ExtendWith(MockitoExtension.class)
-@RunWith(SpringRunner.class)
-@SpringBootTest
-class IEmployeeServiceImplTest {
+class EmployeeServiceImplTest extends BaseTest {
 
     private final BasicJsonTester jsonTester = new BasicJsonTester(this.getClass());
 
@@ -46,35 +34,14 @@ class IEmployeeServiceImplTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("classpath:data/getAllEmployeesResponse.json")
-    private Resource getAllEmployeesResponseResource;
-
-    @Value("classpath:data/getAllEmployeeByIdResponse.json")
-    private Resource getAllEmployeeByIdResponse;
-
-    @Value("classpath:data/getAllEmployeeByIdWithInvalidIdResponse.json")
-    private Resource getAllEmployeeByIdWithInvalidIdResponse;
-
-    @Value("classpath:data/getNoDataResponse.json")
-    private Resource getNoDataResponse;
-
-    @Value("classpath:data/createEmployeeResponse.json")
-    private Resource createEmployeeResponse;
-
-    @Value("classpath:data/deleteEmployeeResponse.json")
-    private Resource deleteEmployeeResponse;
-
     private IEmployeeService iEmployeeService;
-
-    @Autowired
-    private CacheManager cacheManager;
 
     @BeforeEach
     void setUp() throws IOException {
         mockWebServer = new MockWebServer();
         mockWebServer.start();
         String baseUrl = String.format("http://localhost:%s", mockWebServer.getPort());
-        iEmployeeService = new IEmployeeServiceImpl(WebClient.builder().baseUrl(baseUrl).build());
+        iEmployeeService = new EmployeeServiceImpl(WebClient.builder().baseUrl(baseUrl).build());
     }
 
     @AfterEach
@@ -85,10 +52,10 @@ class IEmployeeServiceImplTest {
     @Test
     void test_getAllEmployees_should_succeed() throws InterruptedException {
         mockWebServer.enqueue(new MockResponse()
-                        .setResponseCode(200)
-                        .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getAllEmployeesResponseResource)));
-                        //.setBody(objectMapper.writeValueAsString(getResourceBytes(getAllEmployeesResponseResource))));
+                .setResponseCode(200)
+                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .setBody(resourcesAsString(getAllEmployeesResponseResource)));
+        //.setBody(objectMapper.writeValueAsString(getResourceBytes(getAllEmployeesResponseResource))));
 
         List<Employee> employeesResponse = iEmployeeService.getAllEmployees();
         RecordedRequest request = mockWebServer.takeRequest();
@@ -108,7 +75,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getAllEmployeesResponseResource)));
+                .setBody(resourcesAsString(getAllEmployeesResponseResource)));
 
         List<Employee> firstEmployeesResponse = iEmployeeService.getAllEmployees();
         RecordedRequest request = mockWebServer.takeRequest();
@@ -132,7 +99,7 @@ class IEmployeeServiceImplTest {
     @Test
     void test_getAllEmployees_with_extended_delay_should_throw_exception() throws InterruptedException {
         mockWebServer.enqueue(new MockResponse().setBodyDelay(10, TimeUnit.SECONDS));
-        assertThrowsExactly(ExternalApiInternalServerException.class, () -> iEmployeeService.getAllEmployees());
+        assertThrowsExactly(EmployeeApiInternalServerException.class, () -> iEmployeeService.getAllEmployees());
         RecordedRequest request = mockWebServer.takeRequest();
         assertEquals(EmployeesApiPaths.GET_ALL, request.getPath());
     }
@@ -142,7 +109,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getAllEmployeesResponseResource)));
+                .setBody(resourcesAsString(getAllEmployeesResponseResource)));
 
         List<Employee> employeesBySearchStringResponse = iEmployeeService.getEmployeesByNameSearch("an");
         RecordedRequest request = mockWebServer.takeRequest();
@@ -163,17 +130,11 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getAllEmployeesResponseResource)));
+                .setBody(resourcesAsString(getAllEmployeesResponseResource)));
 
-        List<Employee> employeesBySearchStringResponse = iEmployeeService.getEmployeesByNameSearch("THIS_STRING_SHOULD_NOT_EXIST");
+        assertThrowsExactly(NoDataException.class, () -> iEmployeeService.getEmployeesByNameSearch("THIS_STRING_SHOULD_NOT_EXIST"));
         RecordedRequest request = mockWebServer.takeRequest();
-
         assertEquals(EmployeesApiPaths.GET_ALL, request.getPath());
-        assertNotNull(employeesBySearchStringResponse);
-        assertEquals(0, employeesBySearchStringResponse.size());
-
-        List<Employee> expectedEmployees = Collections.emptyList();
-        assertEquals(expectedEmployees, employeesBySearchStringResponse);
     }
 
     @Test
@@ -181,7 +142,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getAllEmployeeByIdResponse)));
+                .setBody(resourcesAsString(getAllEmployeeByIdResponse)));
 
         String testEmployeeId = "12";
         Optional<Employee> employeeByIdOptionalResponse = iEmployeeService.getEmployeeById(testEmployeeId);
@@ -203,7 +164,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getAllEmployeeByIdWithInvalidIdResponse)));
+                .setBody(resourcesAsString(getAllEmployeeByIdWithInvalidIdResponse)));
 
         String testEmployeeId = "10000000000_invalid_id";
         assertThrowsExactly(NoDataException.class, () -> iEmployeeService.getEmployeeById(testEmployeeId));
@@ -216,7 +177,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getAllEmployeesResponseResource)));
+                .setBody(resourcesAsString(getAllEmployeesResponseResource)));
 
         final Integer actualHighestSalary = iEmployeeService.getHighestSalaryOfEmployees();
 
@@ -224,8 +185,7 @@ class IEmployeeServiceImplTest {
         assertEquals(EmployeesApiPaths.GET_ALL, request.getPath());
 
         assertNotNull(actualHighestSalary);
-        int expected = 725000;
-        assertEquals(expected, actualHighestSalary);
+        assertEquals(HIGHEST_SALARY, actualHighestSalary);
     }
 
     @Test
@@ -233,7 +193,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getNoDataResponse)));
+                .setBody(resourcesAsString(getNoDataResponse)));
 
         assertThrowsExactly(NoDataException.class, () -> iEmployeeService.getHighestSalaryOfEmployees());
 
@@ -246,7 +206,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getAllEmployeesResponseResource)));
+                .setBody(resourcesAsString(getAllEmployeesResponseResource)));
 
         List<String> topTenHighestEarningEmployeeNames = iEmployeeService.getTopTenHighestEarningEmployeeNames();
 
@@ -262,7 +222,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(getNoDataResponse)));
+                .setBody(resourcesAsString(getNoDataResponse)));
 
         assertThrowsExactly(NoDataException.class, () -> iEmployeeService.getTopTenHighestEarningEmployeeNames());
 
@@ -275,17 +235,9 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(createEmployeeResponse)));
+                .setBody(resourcesAsString(createEmployeeResponse)));
 
-        Map<String, Object> testEmployee = new HashMap<>();
-        String expectedName = "Test Employee 1";
-        testEmployee.put(ApplicationConstants.FIELD_EMPLOYEE_NAME, expectedName);
-        int expectedAge = 52;
-        testEmployee.put(ApplicationConstants.FIELD_EMPLOYEE_AGE, expectedAge);
-        int expectedSalary = 543989;
-        testEmployee.put(ApplicationConstants.FIELD_EMPLOYEE_SALARY, expectedSalary);
-        String expectedProfileImage = "https://picsum.photos/200";
-        testEmployee.put(ApplicationConstants.FIELD_EMPLOYEE_PROFILE_IMAGE, expectedProfileImage);
+        Map<String, Object> testEmployee = getCreateEmployeeMap();
 
         Employee actualCreatedEmployee = iEmployeeService.createEmployee(testEmployee);
 
@@ -294,10 +246,10 @@ class IEmployeeServiceImplTest {
 
         assertNotNull(actualCreatedEmployee);
         assertNotNull(actualCreatedEmployee.getId());
-        assertEquals(expectedName, actualCreatedEmployee.getEmployeeName());
-        assertEquals(expectedAge, actualCreatedEmployee.getEmployeeAge());
-        assertEquals(expectedSalary, actualCreatedEmployee.getEmployeeSalary());
-        assertEquals(expectedProfileImage, actualCreatedEmployee.getProfileImage());
+        assertEquals(testEmployee.get(ApplicationConstants.FIELD_EMPLOYEE_NAME), actualCreatedEmployee.getEmployeeName());
+        assertEquals(testEmployee.get(ApplicationConstants.FIELD_EMPLOYEE_AGE), actualCreatedEmployee.getEmployeeAge());
+        assertEquals(testEmployee.get(ApplicationConstants.FIELD_EMPLOYEE_SALARY), actualCreatedEmployee.getEmployeeSalary());
+        assertEquals(testEmployee.get(ApplicationConstants.FIELD_EMPLOYEE_PROFILE_IMAGE), actualCreatedEmployee.getProfileImage());
     }
 
     @Test
@@ -327,7 +279,7 @@ class IEmployeeServiceImplTest {
         mockWebServer.enqueue(new MockResponse()
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(TestUtil.resourcesAsString(deleteEmployeeResponse)));
+                .setBody(resourcesAsString(deleteEmployeeResponse)));
 
         String actualEmployeeId = iEmployeeService.deleteEmployeeById(expectedEmployeeId);
 
