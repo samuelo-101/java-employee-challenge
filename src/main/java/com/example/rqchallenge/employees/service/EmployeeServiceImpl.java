@@ -30,7 +30,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-//@CacheConfig(cacheNames = {"employees"})
 @Service
 public class EmployeeServiceImpl implements IEmployeeService {
 
@@ -97,7 +96,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
                     collect(Collectors.toList());
     }
 
-    @CacheEvict(allEntries = true)
+    @CacheEvict(cacheNames = {"employees", "employeesSearch", "employeesHighestSalary", "employeesTopTenEarners"}, allEntries = true)
     @Override
     public Employee createEmployee(Map<String, Object> employeeInput) {
         InputValidationUtil.validateEmployeeInputFields(employeeInput);
@@ -124,7 +123,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
                 .build();
     }
 
-    @CacheEvict(allEntries = true)
+    @CacheEvict(cacheNames = {"employees", "employeesSearch", "employeesHighestSalary", "employeesTopTenEarners"}, allEntries = true)
     @Override
     public String deleteEmployeeById(String id) {
         InputValidationUtil.validateId(id);

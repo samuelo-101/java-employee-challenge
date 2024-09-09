@@ -2,6 +2,7 @@ package com.example.rqchallenge.employees;
 
 import com.example.rqchallenge.BaseTest;
 import com.example.rqchallenge.employees.constants.ApplicationConstants;
+import com.example.rqchallenge.employees.dto.CreateEmployeeResponse;
 import com.example.rqchallenge.employees.dto.Employee;
 import com.example.rqchallenge.employees.dto.GenericEmployeeResponse;
 import com.example.rqchallenge.employees.dto.ApiError;
@@ -169,8 +170,14 @@ class EmployeeControllerTest extends BaseTest {
     @Test
     void test_createEmployee_should_succeed() throws JsonProcessingException {
         Map<String, Object> createEmployeeMap = getCreateEmployeeMap();
-        GenericEmployeeResponse<Employee> genericEmployeeResponse = objectMapper.readValue(resourcesAsString(createEmployeeResponse), GenericEmployeeResponse.class);
-        when(iEmployeeService.createEmployee(createEmployeeMap)).thenReturn(objectMapper.convertValue(genericEmployeeResponse.getData(), Employee.class));
+        GenericEmployeeResponse<CreateEmployeeResponse> genericEmployeeResponse = objectMapper.readValue(resourcesAsString(createEmployeeResponse), GenericEmployeeResponse.class);
+        CreateEmployeeResponse responseData = objectMapper.convertValue(genericEmployeeResponse.getData(), CreateEmployeeResponse.class);
+        when(iEmployeeService.createEmployee(createEmployeeMap)).thenReturn(Employee.builder().id(responseData.getId())
+                .employeeName(responseData.getName())
+                .employeeAge(responseData.getAge())
+                .employeeSalary(responseData.getSalary())
+                .profileImage(Optional.ofNullable(responseData.getProfileImage()).orElse(""))
+                .build());
         MockMvcResponse mockMvcResponse = given()
                 .standaloneSetup(new EmployeeControllerImpl(iEmployeeService), new ApiControllerAdvice())
                 .contentType(ContentType.JSON)
