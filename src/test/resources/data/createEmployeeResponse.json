@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "data": {
+    "id": 125555,
+    "name": "Test Employee 1",
+    "salary": 543989,
+    "age": 52,
+    "profileImage": "https://picsum.photos/200"
+  },
+  "message": "Successfully! Record has been added."
+}

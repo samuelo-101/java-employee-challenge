@@ -1,0 +1,27 @@
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 7,
+      "employee_name": "Herrod Chandler",
+      "employee_salary": 137500,
+      "employee_age": 59,
+      "profile_image": ""
+    },
+    {
+      "id": 15,
+      "employee_name": "Tatyana Fitzpatrick",
+      "employee_salary": 385750,
+      "employee_age": 19,
+      "profile_image": ""
+    },
+    {
+      "id": 23,
+      "employee_name": "Caesar Vance",
+      "employee_salary": 106450,
+      "employee_age": 21,
+      "profile_image": ""
+    }
+  ],
+  "message": "Successfully! All records has been fetched."
+}
