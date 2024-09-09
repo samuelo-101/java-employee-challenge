@@ -198,6 +198,17 @@ class EmployeeControllerTest extends BaseTest {
     }
 
     @Test
-    void deleteEmployeeById() {
+    void test_deleteEmployeeById_should_succeed() throws JsonProcessingException {
+        GenericEmployeeResponse<String> genericResponse = objectMapper.readValue(resourcesAsString(deleteEmployeeResponse), GenericEmployeeResponse.class);
+        String testId = genericResponse.getData();
+        when(iEmployeeService.deleteEmployeeById(testId)).thenReturn(testId);
+        MockMvcResponse mockMvcResponse = given()
+                .standaloneSetup(new EmployeeControllerImpl(iEmployeeService), new ApiControllerAdvice())
+                .contentType(ContentType.TEXT)
+                .when()
+                .delete("/api/v1/" + testId)
+                .then().statusCode(HttpStatus.OK.value())
+                .log().ifValidationFails()
+                .extract().response().prettyPeek();
     }
 }
